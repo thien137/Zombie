@@ -7,7 +7,7 @@
 
 import pygame
 import math
-from bestest_a import astar, Node
+from Pathing_Algorithm import astar, Node
 import random
 import time
 import threading

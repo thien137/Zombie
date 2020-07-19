@@ -106,7 +106,7 @@ def calculate_stuff(pos, parent, g, end_node, Nodes):
 	Nodes[pos].list = False
 	Nodes[pos].parent = parent
 
-def horizontal_search(pos, horizontal_distance, Nodes, end_node):
+def horizontal_search(pos, horizontal_distance, Nodes, end_node, parent = None):
 
 	""" Look For Nodes That Should Be Checked On the X Axis"""
 
@@ -172,9 +172,9 @@ def horizontal_search(pos, horizontal_distance, Nodes, end_node):
 
 	return horizontal_nodes # Return Nodes To Check
 
-def vertical_search(pos, vertical_distance, Nodes, end_node):
+def vertical_search(pos, vertical_distance, Nodes, end_node, parent = None):
 
-	""" Look For Nodes That Should Be Checked On the Y Axis"""
+	""" Look For Nodes That Should Be Checked On the Y Axis """
 
 	# Lateral Steps Increase g by 1
 	g = 1

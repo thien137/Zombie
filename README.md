@@ -1,2 +1,2 @@
-# Zombie
- Zombie Game Using Pygame
+# SpaceInvaders
+ SpaceInvaders Using Pygame

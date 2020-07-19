@@ -20,7 +20,7 @@ class Node:
         self.list = None # Marker To See If Node Has Been Checked Or Not
         self.type = 0 # 0 = wall is on the node
 
-def astar(start, end, Nodes, matrix):
+def astar(start, end, Nodes):
 
 	""" A* Jump Point Search 
 
@@ -52,19 +52,8 @@ def astar(start, end, Nodes, matrix):
 		open_list.sort(key = lambda position : Nodes[position].f) # Sort Nodes That Need To Be Checked By Their f value
 
 		current_node = open_list[0] # Check The Node With The Lowest f Value
-
+		#print(current_node)
 		open_list.remove(current_node) # Remove That Node From The Open List Because It "Has" Been Checked
-		
-		# Break If The Current Node Is The Finish Line
-		if current_node == end_node:
-
-			#Retrace To Find The Path
-
-			path = []
-			while Nodes[current_node].parent:
-				path.append(current_node)
-				current_node = Nodes[current_node].parent
-			return path[::-1]
 
 		directions = [(0, 1), (1, 0), (-1, 0), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]	# Directions In Which New Path Can Be Formed
 
@@ -89,12 +78,21 @@ def astar(start, end, Nodes, matrix):
 			
 			if x != 0 and y != 0:
 				open_list.extend(diagonal_search(child_node, x, y, Nodes, end_node))
+				# Check If End Has Been Found
+				if end_node in open_list:
+					return retrace_path(end_node, Nodes)
 
 			elif x != 0 and y == 0:
 				open_list.extend(horizontal_search(child_node, x, Nodes, end_node))
+				# Check If End Has Been Found
+				if end_node in open_list:
+					return retrace_path(end_node, Nodes)
 
 			elif x == 0 and y != 0:
 				open_list.extend(vertical_search(child_node, y, Nodes, end_node))
+				# Check If End Has Been Found				
+				if end_node in open_list:
+					return retrace_path(end_node, Nodes)
 
 def calculate_stuff(pos, parent, g, end_node, Nodes):
 
@@ -136,7 +134,12 @@ def horizontal_search(pos, horizontal_distance, Nodes, end_node, parent = None):
 			calculate_stuff((x0, y0), (x0 - horizontal_distance, y0), g, end_node, Nodes) # Calculate Node's attributes
 			break
 
-		calculate_stuff((x0, y0), (x0 - horizontal_distance, y0), g, end_node, Nodes) # Calculate Node's attributes
+		# Smoothing Diagonal Search To Horizontal Search
+		if parent:
+			calculate_stuff((x0, y0), parent, g, end_node, Nodes) # Calculate Node's attributes
+			parent = None
+		else:
+			calculate_stuff((x0, y0), (x0 - horizontal_distance, y0), g, end_node, Nodes) # Calculate Node's attributes
 
 		# If X Is Increasing and If The Node Has A Forced Neighbor
 		if horizontal_distance > 0:
@@ -174,7 +177,7 @@ def horizontal_search(pos, horizontal_distance, Nodes, end_node, parent = None):
 
 def vertical_search(pos, vertical_distance, Nodes, end_node, parent = None):
 
-	""" Look For Nodes That Should Be Checked On the Y Axis """
+	""" Look For Nodes That Should Be Checked On the Y Axis"""
 
 	# Lateral Steps Increase g by 1
 	g = 1
@@ -202,12 +205,17 @@ def vertical_search(pos, vertical_distance, Nodes, end_node, parent = None):
 			calculate_stuff((x0, y0), (x0, y0 - vertical_distance), g, end_node, Nodes)
 			break
 
-		calculate_stuff((x0 , y0), (x0, y0 - vertical_distance), g, end_node, Nodes)
-		
+		# Smoothing Diagonal Search Into Vertical Search
+		if parent:
+			calculate_stuff((x0 , y0), parent, g, end_node, Nodes)
+			parent = None
+		else:
+			calculate_stuff((x0 , y0), (x0, y0 - vertical_distance), g, end_node, Nodes)
+
 		# If Y Is Increasing and If The Node Has A Forced Neighbor
 		if vertical_distance > 0:
 			try:
-				if Nodes[(x0 + 4, y0)].position[0].type != 0 and Nodes[(x0 + 4, y0 + 1)].type == 0: # Forced Neighbor Is To The Right
+				if Nodes[(x0 + 4, y0)].type != 0 and Nodes[(x0 + 4, y0 + 1)].type == 0: # Forced Neighbor Is To The Right
 					vertical_nodes.append((x0 + vertical_distance, y0 + 1)) # Add Node To List
 					calculate_stuff((x0 + vertical_distance, y0 + 1), (x0, y0), math.sqrt(2), end_node, Nodes) # Calculate Node's attributes
 			except:
@@ -267,18 +275,25 @@ def diagonal_search(pos, horizontal_distance, vertical_distance, Nodes, end_node
 			diagonal_nodes.append((x0, y0))
 			calculate_stuff((x0, y0), (x0 - horizontal_distance, y0 - vertical_distance), g, end_node, Nodes)
 			break
-		
-		# Look DLeft/Right
-		diagonal_nodes += horizontal_search((x0, y0), horizontal_distance, Nodes, end_node, (x0 - horizontal_distance, y0 - vertical_distance))
-		# Look Up/Down
-		diagonal_nodes += vertical_search((x0, y0), vertical_distance, Nodes, end_node, (x0 - horizontal_distance, y0 - vertical_distance))
 
 		calculate_stuff((x0, y0), (x0 - horizontal_distance, y0 - vertical_distance), g, end_node, Nodes) # Calculate Node's Attributes
+
+		# Look Left/Right
+		diagonal_nodes += horizontal_search((x0, y0), horizontal_distance, Nodes, end_node, (x0 - horizontal_distance, y0 - vertical_distance))
+
+		# Look Up/Down
+		diagonal_nodes += vertical_search((x0, y0), vertical_distance, Nodes, end_node, (x0 - horizontal_distance, y0 - vertical_distance))
 
 		x0 += horizontal_distance; y0 += vertical_distance # Keep Moving In The Direction
 
 	return diagonal_nodes
 
+def retrace_path(current_node, Nodes):
+	path = []
+	while Nodes[current_node].parent:
+		path.append(current_node)
+		current_node = Nodes[current_node].parent
+	return path[::-1]
 
 if __name__ == "__main__":
 
@@ -364,11 +379,16 @@ if __name__ == "__main__":
 		  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
 	Nodes = {(i, j) : Node((i, j), None) for i in range(len(matrix)) for j in range(len(matrix[0]))}
+
+	for i in range(80):
+		for j in range(80):
+			if matrix[i][j] == 1:
+				Nodes[(i, j)].type = 1
+
+	start = Nodes[(0, 0)]
 	
-	start = (0, 12)
-	
-	end = (46, 15)
+	end = Nodes[(13, 75)]
 
 	begin = time.time()
-	print(astar(matrix, start, end, Nodes))
+	print(astar(start, end, Nodes))
 	print(time.time() - begin)

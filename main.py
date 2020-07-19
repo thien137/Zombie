@@ -217,17 +217,14 @@ def isCollision(player, enemy):
 	if abs(player.x - enemy.x) < player.width and abs(player.y - enemy.y) < player.depth:
 		return True
 
-def calculate_zombie_path(player, enemy, Nodes, matrix):
+def calculate_zombie_path(player, enemy, Nodes):
 
 	""" Calculate The Pathing For Enemy To Pursue Player Using A* and Jump Point Search """
 
 	global zombie_path  # List Containing Path 
+	global maxtime
 
-	#begin = time.time() # Begin Time
-
-	zombie_path = astar(enemy, player, Nodes, matrix) # Calculation
-
-	#print(time.time()-begin) # End Time
+	zombie_path = astar(enemy, player, Nodes) # Calculation
 
 	# Reset Nodes
 
@@ -363,7 +360,7 @@ window = pygame.display.set_mode((800, 800)) # Set Window Size
 pygame.display.set_caption("Zombie Game") # Set Window Name
 icon = pygame.image.load('zombie.ico') # Load Icon Image
 pygame.display.set_icon(icon) # Set Window Icon
-
+maxtime = 0
 # Node Map
 
 Nodes = {(i, j) : Node((i, j), None) for i in range(len(matrix)) for j in range(len(matrix[0]))}
@@ -373,7 +370,7 @@ for wall in walls:
 
 # Calculate Zombie Path
 
-calculate_zombie_path(steve, zombie, Nodes, matrix)
+calculate_zombie_path(steve, zombie, Nodes)
 
 # PyGame MainLoop
 
@@ -382,7 +379,7 @@ run = True
 while run:
 	
 	# Thread Calculating New Path For Enemy
-	thread = threading.Thread(target = calculate_zombie_path, args = (steve, zombie, Nodes, matrix), daemon = True)
+	thread = threading.Thread(target = calculate_zombie_path, args = (steve, zombie, Nodes), daemon = True)
 	
 	if check_inputs(window, steve, walls): # If Moved, Start Calculating New Path
 		thread.start()
